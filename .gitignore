@@ -1,0 +1,33 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+
+/src/generated/prisma
+
+
+
+# Node
+node_modules/
+npm-debug.log*
+yarn.lock
+
+# Env
+.env
+.env.*
+
+# Build
+dist/
+build/
+
+# Prisma
+prisma/dev.db
+
+# Docker
+.pgdata
+.redisdata
+
+# OS
+.DS_Store
+Thumbs.db
