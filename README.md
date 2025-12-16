@@ -313,10 +313,10 @@ Push notifications (FCM / APNS)
 
 Metrics & tracing (Prometheus)
 
-👤 Author
-Ayush Upadhyay
-Aspiring Software Development Engineer
-Focused on system design & scalable backend engineering
+- 👤 Author
+- Ayush Upadhyay
+- Aspiring Software Development Engineer
+- Focused on system design & scalable backend engineering
 
 
 
