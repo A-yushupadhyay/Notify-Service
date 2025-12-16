@@ -51,38 +51,62 @@ In real systems:
 
 ## 🧠 High-Level Architecture
 
-┌──────────────┐
-│ Frontend │ (React + WebSocket)
-└──────┬───────┘
-│ REST / WS
-▼
-┌──────────────┐
-│ API Server │ (Express)
-│ (Rate Limit) │
-└──────┬───────┘
-│ Publish Event
-▼
-┌────────────────────────┐
-│ Redis Streams │
-│ (notify / bulk / dlq) │
-└──────┬─────────┬───────┘
-│ │
-▼ ▼
-┌──────────┐ ┌────────────┐
-│ Workers │ │ Scheduler │
-│ (Retry) │ │ (ZSET) │
-└────┬─────┘ └────┬───────┘
-│ │
-▼ ▼
-┌────────────────────────┐
-│ PostgreSQL │
-│ (Prisma ORM) │
-└─────────┬──────────────┘
-▼
-┌────────────────────────┐
-│ WebSocket Gateway │
-│ (Live UI Updates) │
-└────────────────────────┘
+flowchart LR
+    FE[Frontend<br/>React + WebSocket]
+    API[API Server<br/>Express + Rate Limit]
+    RS[Redis Streams<br/>notify / bulk / dlq]
+    W[Worker Service<br/>Retry Logic]
+    BW[Bulk Worker<br/>Fan-out]
+    SCH[Scheduler<br/>ZSET]
+    DB[(PostgreSQL<br/>Prisma ORM)]
+    WS[WebSocket Gateway<br/>Live Updates]
+
+    FE -->|REST / WS| API
+    API -->|Publish Event| RS
+
+    RS --> W
+    RS --> BW
+    SCH --> RS
+
+    W --> DB
+    W --> WS
+    BW --> RS
+    DB --> API
+    WS --> FE
+
+
+Core Flow: Notification Lifecycle (Visual)
+
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant API
+    participant Redis
+    participant Worker
+    participant DB
+    participant WebSocket
+
+    User->>Frontend: Send Notification
+    Frontend->>API: POST /api/notify
+    API->>Redis: Publish event
+    API-->>Frontend: 200 OK (fast)
+
+    Redis->>Worker: Consume event
+    Worker->>DB: Save notification
+    Worker->>WebSocket: Emit real-time event
+    WebSocket-->>Frontend: Live update
+
+DLQ Flow
+
+flowchart TD
+    RS[Redis Stream]
+    W[Worker]
+    DLQ[Dead Letter Queue]
+
+    RS --> W
+    W -->|Success| DB[(PostgreSQL)]
+    W -->|Failure| W
+    W -->|Max retries exceeded| DLQ
 
 yaml
 Copy code
